@@ -1,0 +1,415 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kind-of-adobe</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" type="text/css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link href="https://cdn.jsdelivr.net/gh/mum-never-proud/unified-demo-theme/dist/styles/theme.min.css" rel="stylesheet"
+    type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.css" integrity="sha512-1qnaNbQJ1IbEE01sp3ac1n/oa3olZ0N9io+n2Tbdk/sbWMRoMi5Btc/MLqtWCAIHVbPr5dukCODmyLVxx8pmKA==" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.26.0/slimselect.min.css" integrity="sha512-ifnw7uo3puPqptyK3NL7X5zAilwRd7g5DjC8NDov8+zS/wyT1jaoVocaLePaZ7cGzflIFv58/4AtqImsO8UYxw==" crossorigin="anonymous" />
+  <style>
+    @media all and (max-width: 767px) {
+      #filter-options {
+        padding: 15px !important;
+      }
+
+      #filter-options > li {
+        padding: 10px;
+      }
+    }
+    #filters-wrapper {
+      position: absolute;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+    #filters-wrapper > div {
+      max-width: 400px;
+      flex: 1;
+      padding: 25px 15px;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    #filter-options {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      flex-wrap: wrap;
+      list-style-type: none;
+      min-height: 55px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+    }
+    #range-slider {
+      max-width: 300px;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+    }
+    #filter-options > li {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 55px;
+    }
+    #filter-options > li:hover {
+      background-color: #146fbe;
+      cursor: pointer;
+    }
+    #filter-options > li.active {
+      background-color: #146fbe;
+    }
+    #image-canvas {
+      border: 0;
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      display: none;
+      background: #fff;
+    }
+    #image-filter {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1 class="text-center">kind-of-adobe</h1>
+  </div>
+  <div class="container">
+    <div class="row mt-3">
+      <div class="col-12">
+        <p class="text-center text-break">A simple Image Editor made using CanvasRenderingContext2D.filter API</p>
+      </div>
+    </div>
+    <div class="row mt-5">
+      <div class="col-12">
+        <div class="alert alert-warning text-break text-center" role="alert">
+          CanvasRenderingContext2D.filter API is experimental and has limited support for more info <a href="https://caniuse.com/?search=canvas%20filter" target="_blank" rel="noreferrer">click here</a>.
+        </div>
+      </div>
+    </div>
+    <div class="row d-flex justify-content-center mt-5">
+      <div class="col-lg-4 col-12">
+        <form id="image-picker-form" class="p-3 border">
+          <div class="form-group">
+            <div class="alert alert-info text-break text-center" role="alert">
+              Image will be resized with Aspect Ratio based on Screen Resolution.
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="select-image">Pick Image</label>
+            <input type="file" class="form-control-file" id="image-picker" accept="image/*" autocomplete="off" />
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="row mt-5">
+      <div class="col-12">
+        <footer>
+          <p class="text-center">made with much<img alt="logo" src="https://cdn.jsdelivr.net/gh/mum-never-proud/unified-demo-theme@latest/dist/images/icecream-love.svg" width="50" height="50">
+          </p>
+        </footer>
+      </div>
+    </div>
+    <div id="filters-wrapper">
+      <div>
+        <div id="range-slider" class="mb-3"></div>
+        <select id="filter-options" autocomplete="off">
+          <option value="0">Blur</option>
+          <option value="1">Brightness</option>
+          <option value="2">Contrast</option>
+          <option value="3">Grayscale</option>
+          <option value="4">Hue</option>
+          <option value="5">Invert</option>
+          <option value="6">Opacity</option>
+          <option value="7">Saturate</option>
+          <option value="8">Sepia</option>
+        </select>
+        <div id="canvas-options" class="mt-5 d-flex justify-content-end">
+          <button class="btn btn-danger mr-2" id="discard">Discard</button>
+          <button class="btn btn-primary" id="export">Export</button>
+        </div>
+      </div>
+    </div>
+    <div id="image-canvas">
+      <div id="image-filter"></div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.1/nouislider.min.js" integrity="sha512-vW4D1Qqu6IlAG2JKqtE1hxCZyGtzJf8LVBax66gAJhn0zsesNvaq7laQWViwBWntK8gYELbvFpok8h+m86LrJQ==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/1.26.0/slimselect.min.js" integrity="sha512-adAL21xXWSA8ejZPKCFuxjWBNtmFXrW8OUeKkRsqn42yKyg2VkX+MO+YdMBftzLG07fcdR/FJCy8mk5iMgrezw==" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      const fs = new FileReader();
+      const image = new Image();
+      const imagePickerForm = document.getElementById('image-picker-form');
+      const imagePicker = document.getElementById('image-picker');
+      const imageCanvas = document.getElementById('image-canvas');
+      const imageFilter = document.getElementById('image-filter');
+      const filtersWrapper = document.getElementById('filters-wrapper');
+      const rangeSlider = document.getElementById('range-slider');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const filterOptions = new SlimSelect({
+        select: '#filter-options',
+        hideSelectedOption: true,
+        onChange: (selectedFilter) => updateSliderOptions(selectedFilter.value)
+      });
+      const availableFilters = [
+        {
+          functionName: 'blur',
+          unit: 'px',
+          defaultValue: 0,
+          currentValue: 0,
+          range: {
+            min: 0,
+            max: 30,
+          },
+          step: 1,
+        },
+        {
+          functionName: 'brightness',
+          unit: '',
+          defaultValue: 1,
+          currentValue: 1,
+          range: {
+            min: 0,
+            max: 4,
+          },
+          step: 0.05,
+        },
+        {
+          functionName: 'contrast',
+          unit: '',
+          defaultValue: 1,
+          currentValue: 1,
+          range: {
+            min: 0,
+            max: 4,
+          },
+          step: 0.05,
+        },
+        {
+          functionName: 'grayscale',
+          unit: '',
+          defaultValue: 0,
+          currentValue: 0,
+          range: {
+            min: 0,
+            max: 1,
+          },
+          step: 0.01,
+        },
+        {
+          functionName: 'hue-rotate',
+          unit: 'deg',
+          defaultValue: 0,
+          currentValue: 0,
+          range: {
+            min: 0,
+            max: 360,
+          },
+          step: 1,
+        },
+        {
+          functionName: 'invert',
+          unit: '',
+          defaultValue: 0,
+          currentValue: 0,
+          range: {
+            min: 0,
+            max: 1,
+          },
+          step: 0.01,
+        },
+        {
+          functionName: 'opacity',
+          unit: '',
+          defaultValue: 1,
+          currentValue: 1,
+          range: {
+            min: 0,
+            max: 1,
+          },
+          step: 0.01,
+        },
+        {
+          functionName: 'saturate',
+          unit: '',
+          defaultValue: 1,
+          currentValue: 1,
+          range: {
+            min: 0,
+            max: 4,
+          },
+          step: 0.05,
+        },
+        {
+          functionName: 'sepia',
+          unit: '',
+          defaultValue: 0,
+          currentValue: 0,
+          range: {
+            min: 0,
+            max: 1,
+          },
+          step: 0.01,
+        },
+        {
+          displayName: 'Brightness',
+          functionName: 'brightness',
+          unit: '',
+          defaultValue: 1,
+          currentValue: 1,
+          min: 0,
+          max: 4,
+          step: 0.05,
+        },
+      ];
+      noUiSlider.create(rangeSlider, {
+        start: [0],
+        behaviour: 'drag',
+        range: {
+          min: 0,
+          max: 1,
+        },
+        tooltips: true,
+        connect: 'lower',
+      })
+        .on('slide', updateFilters);
+      let applyStylesTimer = null;
+      canvas.style.imageRendering = 'crisp-edges';
+
+      function attachScaledImageProps() {
+        canvas.width = filtersWrapper.clientWidth
+        canvas.height = filtersWrapper.clientHeight;
+        image.scaledDimensions = computeScaledImageProps(canvas.width, canvas.height, image.width, image.height);
+      }
+
+      function computeScaledImageProps(cw, ch, iw, ih) {
+        const ratio = Math.min(cw / iw, ch / ih);
+        const scaledImageWidth = iw * ratio;
+        const scaledImageHeight = ih * ratio;
+
+        return {
+          x: (cw - scaledImageWidth) / 2,
+          y: (ch - scaledImageHeight) / 2,
+          w: scaledImageWidth,
+          h: scaledImageHeight
+        };
+      }
+
+      function drawImage() {
+        return function (filters) {
+          if (filters) {
+            ctx.filter = filters;
+          }
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(
+            image,
+            image.scaledDimensions.x,
+            image.scaledDimensions.y,
+            image.scaledDimensions.w,
+            image.scaledDimensions.h
+          );
+        }
+      }
+
+      function computeFilters() {
+        return availableFilters.reduce(
+          (prevFilter, currentFilter) => `${prevFilter} ${currentFilter.functionName}(${currentFilter.currentValue}${currentFilter.unit})`, ''
+        );
+      }
+
+      function updateFilters(a, _, _, _, _, e) {
+        availableFilters[rangeSlider.__filter__index__].currentValue = a[0];
+
+        window.clearTimeout(applyStylesTimer);
+
+        applyStylesTimer = setTimeout(() => drawImage()(computeFilters()), 100);
+      }
+
+      function resetFilters() {
+        availableFilters.forEach(filter => {
+          filter.currentValue = filter.defaultValue;
+        });
+      }
+
+      function updateSliderOptions(filterIndex) {
+        rangeSlider.__filter__index__ = filterIndex;
+        rangeSlider.noUiSlider.updateOptions(
+          Object.assign(availableFilters[filterIndex], { start: [availableFilters[filterIndex].currentValue] })
+        );
+      }
+
+      fs.addEventListener('load', () => { image.src = fs.result; });
+      imagePicker.addEventListener('change', (e) => fs.readAsDataURL(imagePicker.files[0]));
+      image.addEventListener('load', () => {
+        canvas.width = filtersWrapper.clientWidth;
+        canvas.height = filtersWrapper.clientHeight;
+        filtersWrapper.style.display = 'flex';
+        imageCanvas.style.display = 'block';
+
+        updateSliderOptions(0);
+        attachScaledImageProps();
+        drawImage()();
+      });
+      document.getElementById('export').addEventListener('click', () => {
+        const a = document.createElement('a');
+        const ext = imagePicker.value.slice(imagePicker.value.lastIndexOf('.') + 1)
+        const newCanvas = document.createElement('canvas');
+        const newCtx = newCanvas.getContext('2d');
+
+        newCanvas.style.imageRendering = 'crisp-edges';
+        newCanvas.width = image.scaledDimensions.w;
+        newCanvas.height = image.scaledDimensions.h;
+
+        newCtx.filter = ctx.filter;
+        newCtx.drawImage(image, 0, 0, newCanvas.width, newCanvas.height);
+
+        a.setAttribute('href', newCanvas.toDataURL());
+        a.setAttribute('download', 'download.' + ext);
+        a.click();
+      });
+      document.getElementById('discard').addEventListener('click', () => {
+        imagePickerForm.reset();
+        window.setTimeout(() => {
+          resetFilters();
+          filterOptions.set(0);
+        });
+
+        filtersWrapper.style.display = 'none';
+        imageCanvas.style.display = 'none';
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
+      window.addEventListener('resize', () => {
+        canvas.width = filtersWrapper.clientWidth
+        canvas.height = filtersWrapper.clientHeight;
+
+        attachScaledImageProps();
+        drawImage()(computeFilters());
+      });
+
+      imageFilter.appendChild(canvas);
+    })();
+  </script>
+</body>
+
+</html>
