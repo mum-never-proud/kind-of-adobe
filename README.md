@@ -1,2 +1,3 @@
 # kind-of-adobe
-apply various filter effects to image
+
+A simple Image Editor created using **CanvasRenderingContext2D.filter** API
